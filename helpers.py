@@ -7,6 +7,6 @@ def read_from_xlx(pathname, lbl_2d=False):
         df = pd.read_excel (pathname)
     return df
 
-def split_string_based_on_char(my_string):
-    splited_string = my_string.split(sep='[')
+def split_string_based_on_char(my_string,separator='['):
+    splited_string = my_string.split(sep=separator)
     return splited_string
