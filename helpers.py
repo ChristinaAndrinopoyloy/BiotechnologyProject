@@ -8,5 +8,5 @@ def read_from_xlx(pathname, lbl_2d=False):
     return df
 
 def split_string_based_on_char(my_string):
-    splited_string = my_string.split(sep='[',maxsplit=1)
+    splited_string = my_string.split(sep='[')
     return splited_string
