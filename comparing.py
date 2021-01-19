@@ -61,6 +61,7 @@ for part in brain_parts:
     # common proteins
     common_proteins = list(set(proteins_from_HRMS).intersection(proteins_from_2DGE))
     print(len(common_proteins))
+    hlp.plot_results(common_proteins, part)
 
     # different proteins
     unique_2DGE = [item for item in proteins_from_2DGE if item not in proteins_from_HRMS]

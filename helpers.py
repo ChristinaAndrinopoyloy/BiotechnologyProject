@@ -38,8 +38,8 @@ def plot_results(words, title):
     # Create and generate a word cloud image:
     wordcloud = WordCloud(width=1600, height=800,
                         background_color="white", max_words=2000, mask=mask,
-                        max_font_size=4, min_font_size=4, colormap="Blues",
-                        contour_width=2, contour_color='steelblue').generate(listToStr)
+                        max_font_size=8, min_font_size=8, colormap="Purples",
+                        contour_width=2, contour_color='black').generate(listToStr)
 
     # Display the generated image:
     plt.imshow(wordcloud, interpolation='bilinear')
@@ -55,6 +55,7 @@ def find_unique_proteins_per_brainpart(df):
                         'Hipocampus':[],
                         'Cerebellum':[],
                         'Cortex':[]}
+    counter = 0
 
     for index, row in df.iterrows():
         if row['Cerebral cortex'] != 0 and row['Cerebral cortex'] != 1:
@@ -88,6 +89,7 @@ def find_unique_proteins_per_brainpart(df):
                 key = 'Mid_Brain'
 
             if cerebellum == 1:
+                counter = counter + 1
                 key = 'Cerebellum'
 
             if medulla == 1:
@@ -96,6 +98,19 @@ def find_unique_proteins_per_brainpart(df):
             if key not in brainpart_proteins_dict:
                 brainpart_proteins_dict[key] = []
             brainpart_proteins_dict[key].append(protein)
+        else:
+            if cerebellum == 1:
+                print('*'*40)
+                print(cerebellum)
+                print(cortex)    
+                print(hipocampus)    
+                print(hipothalamus)    
+                print(medulla)    
+                print(mid_brain)    
+                print(olfactory_balb)    
+                print('*'*40)
+
+
 
     for key, value in brainpart_proteins_dict.items():
         excel_filename = './MOUSE BRAIN PROTEOME HRMS/UNIQUE/'+key+'_UNIQUE.xlsx'
@@ -109,4 +124,5 @@ def find_unique_proteins_per_brainpart(df):
             worksheet.write(row, column, item) 
             row += 1
         excel_file.close() 
+    print(counter)    
         

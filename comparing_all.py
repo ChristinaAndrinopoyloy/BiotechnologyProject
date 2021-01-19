@@ -16,6 +16,9 @@ df_HRMS.rename(columns = {'Entry name': 'Accession Name'}, inplace=True)
 common_proteins = pd.merge(df_2D, df_HRMS, on=['Accession Name'], how='inner')[['Accession Name',"Protein names"]]
 common_proteins.to_excel(common_name) 
 print(f"Please check: {common_name}")
+common_proteins_temp = list(common_proteins['Accession Name'])
+hlp.plot_results(common_proteins_temp, 'Common proteins of 2DGE and HRMS')
+
 
 # find the unique proteins of HRMS
 unique_proteins = pd.merge(df_HRMS, df_2D, how='outer', indicator=True)
