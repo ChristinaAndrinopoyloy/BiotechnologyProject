@@ -61,32 +61,26 @@ for part in brain_parts:
     # common proteins
     common_proteins = list(set(proteins_from_HRMS).intersection(proteins_from_2DGE))
     print(len(common_proteins))
-    hlp.plot_results(common_proteins, part)
+    # hlp.plot_results(common_proteins, part)
 
     # different proteins
     unique_2DGE = [item for item in proteins_from_2DGE if item not in proteins_from_HRMS]
     unique_HRMS = [item for item in proteins_from_HRMS if item not in proteins_from_2DGE]
 
-    # create common excels
-    excel_file = xlsxwriter.Workbook(common_name) 
-    worksheet = excel_file.add_worksheet() 
-    row = 1
-    column = 0
-    worksheet.write(0, 0, "Accession Name")
+    full_common_proteins = hlp.find_description_from_accession_name(common_proteins, df_HRMS)
+    full_unique_HRMS = hlp.find_description_from_accession_name(unique_HRMS, df_HRMS)
+    full_unique_2DGE = hlp.find_description_from_accession_name(unique_2DGE, df_2D, flag_2dge=True)
 
-    for item in common_proteins : 
-        worksheet.write(row, column, item) 
-        row += 1
-    excel_file.close() 
+    
 
     # create common excels
-    hlp.write_on_excel(common_name, common_proteins)
+    hlp.write_on_excel(common_name, full_common_proteins)
 
     # create unique HRMS excels
-    hlp.write_on_excel(unique_name1, unique_HRMS)
+    hlp.write_on_excel(unique_name1, full_unique_HRMS)
     
     # create unique 2DGE excels
-    hlp.write_on_excel(unique_name2, unique_2DGE)
+    hlp.write_on_excel(unique_name2, full_unique_2DGE)
 
     # hlp.plot_results(common_proteins, part)
     print('='*100)

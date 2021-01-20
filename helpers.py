@@ -20,11 +20,16 @@ def write_on_excel(pathname, mylist):
     row = 1
     column = 0
     worksheet.write(0, 0, "Accession Name")
+    worksheet.write(0, 1, "Description")
+
 
     for item in mylist : 
-        worksheet.write(row, column, item) 
+        print(item[0])
+        print(item[1])
+        worksheet.write(row, column, item[0]) 
+        worksheet.write(row, column + 1, item[1]) 
         row += 1
-    excel_file.close()     
+    excel_file.close()   
 
 def split_string_based_on_char(my_string,separator='['):
     splited_string = my_string.split(sep=separator)
@@ -62,6 +67,9 @@ def find_unique_proteins_per_brainpart(df):
             continue
 
         protein = row['Entry name']
+        description = row['Protein names']
+        if description != description:
+            description = 'None'
         cortex = int(row['Cerebral cortex'])
         olfactory_balb = int(row['Olfactory Bulb'])
         hipocampus = int(row['Hippocampus'])
@@ -97,20 +105,7 @@ def find_unique_proteins_per_brainpart(df):
             
             if key not in brainpart_proteins_dict:
                 brainpart_proteins_dict[key] = []
-            brainpart_proteins_dict[key].append(protein)
-        else:
-            if cerebellum == 1:
-                print('*'*40)
-                print(cerebellum)
-                print(cortex)    
-                print(hipocampus)    
-                print(hipothalamus)    
-                print(medulla)    
-                print(mid_brain)    
-                print(olfactory_balb)    
-                print('*'*40)
-
-
+            brainpart_proteins_dict[key].append((protein, description))
 
     for key, value in brainpart_proteins_dict.items():
         excel_filename = './MOUSE BRAIN PROTEOME HRMS/UNIQUE/'+key+'_UNIQUE.xlsx'
@@ -119,10 +114,27 @@ def find_unique_proteins_per_brainpart(df):
         row = 1
         column = 0
         worksheet.write(0, 0, "Accession Name")
+        worksheet.write(0, 1, "Description")
+
 
         for item in value : 
-            worksheet.write(row, column, item) 
+            worksheet.write(row, column, item[0]) 
+            worksheet.write(row, column+1, item[1]) 
+
             row += 1
-        excel_file.close() 
-    print(counter)    
-        
+        excel_file.close()    
+
+
+def find_description_from_accession_name(proteins, df, flag_2dge=False):
+    info_protein = []
+
+    if flag_2dge:
+        descriptin_index = 'Function'
+    else:
+        descriptin_index = 'Description'
+
+    for prot in proteins:
+        row = df[df['Accession Name'].str.contains(prot)]
+        description = row[descriptin_index].values[0]
+        info_protein.append((prot,description))
+    return info_protein    

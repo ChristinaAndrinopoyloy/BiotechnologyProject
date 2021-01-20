@@ -9,8 +9,8 @@ for part in brain_parts:
     pathname_2D = './MOUSE BRAIN 2DGE PROTEINS/'+part+'.xls'
     pathname_HRMS = './MOUSE BRAIN PROTEOME HRMS/'+part+'.xlsx'
     common_name = './Results/IMMEDIATELY/'+part+'/common_proteins_'+part+'.xls'
-    # unique_name1 = './Results/IMMEDIATELY/'+part+'/HRMS_unique_proteins_'+part+'.xls'
-    # unique_name2 = './Results/IMMEDIATELY/'+part+'/2DGE_unique_proteins_'+part+'.xls'
+    unique_name1 = './Results/IMMEDIATELY/'+part+'/HRMS_unique_proteins_'+part+'.xls'
+    unique_name2 = './Results/IMMEDIATELY/'+part+'/2DGE_unique_proteins_'+part+'.xls'
 
 
     df_2D = hlp.read_from_xlx(pathname_2D, lbl_2d=True)
@@ -32,25 +32,24 @@ for part in brain_parts:
         df_HRMS.rename(columns = {'Entry name': 'Accession Name'}, inplace=True)
 
     # Find the common proteins of the two dataframes and save the results
-    common_proteins = pd.merge(df_2D, df_HRMS, on=['Accession Name'], how='inner')['Accession Name']
+    common_proteins = pd.merge(df_2D, df_HRMS, on=['Accession Name'], how='inner')[['Accession Name', 'Description', 'Protein name']]
     common_proteins.to_excel(common_name) 
     # print(f"Please check: {common_name}")
 
     print(f"I am going to compare:{df_HRMS.shape} from HRMS with {df_2D.shape} from 2DGE")
     print(len(common_proteins))
 
-    # # find the unique proteins of HRMS
-    # unique_proteins = pd.merge(df_HRMS, df_2D, how='outer', indicator=True)
-    # unique_proteins_df = unique_proteins.loc[unique_proteins._merge == 'left_only', ['Accession Name']]
-    # unique_proteins_df.to_excel(unique_name1) 
-    # # print(f"Please check: {unique_name1}")
-    # print(f"HRMS unique:{unique_proteins.shape}")
+    # find the unique proteins of HRMS  
+    unique_proteins = pd.merge(df_HRMS, df_2D, how='outer', indicator=True)
+    unique_proteins_df = unique_proteins.loc[unique_proteins._merge == 'left_only', ['Accession Name', 'Description']]
+    unique_proteins_df.to_excel(unique_name1) 
+    print(f"Please check: {unique_name1}")
 
-    # # find the unique proteins of 2DGE
-    # unique_proteins = pd.merge(df_2D, df_HRMS, how='outer', indicator=True)
-    # unique_proteins_df = unique_proteins.loc[unique_proteins._merge == 'left_only', ['Accession Name']]
-    # unique_proteins_df.to_excel(unique_name2) 
-    # # print(f"Please check: {unique_name2}")
+    # find the unique proteins of 2DGE
+    unique_proteins = pd.merge(df_2D, df_HRMS, how='outer', indicator=True)
+    unique_proteins_df = unique_proteins.loc[unique_proteins._merge == 'left_only', ['Accession Name', 'Protein name']]
+    unique_proteins_df.to_excel(unique_name2) 
+    print(f"Please check: {unique_name2}")
     
     # print(f"2dGE unique:{unique_proteins.shape}")
     
