@@ -14,6 +14,7 @@ def read_from_xlx(pathname, lbl_2d=False):
         df = pd.read_excel (pathname)
     return df
 
+
 def write_on_excel(pathname, mylist):
     excel_file = xlsxwriter.Workbook(pathname) 
     worksheet = excel_file.add_worksheet() 
@@ -22,7 +23,6 @@ def write_on_excel(pathname, mylist):
     worksheet.write(0, 0, "Accession Name")
     worksheet.write(0, 1, "Description")
 
-
     for item in mylist : 
         print(item[0])
         print(item[1])
@@ -30,6 +30,20 @@ def write_on_excel(pathname, mylist):
         worksheet.write(row, column + 1, item[1]) 
         row += 1
     excel_file.close()   
+
+
+def merge_excels(excel_1, excel_2, excel_3, write_flag=False, pathname=None):
+    df_1 = read_from_xlx(excel_1)[['Accession Name']]
+    df_2 = read_from_xlx(excel_2)[['Accession Name']]
+    df_3 = read_from_xlx(excel_3)[['Accession Name']]
+
+    dfs = [df_1, df_2, df_3]
+    total_df = pd.concat(dfs)
+    total_df.drop_duplicates(subset=['Accession Name'])
+
+    if write_flag:
+        total_df.to_csv(pathname, index = False)
+    return total_df
 
 def split_string_based_on_char(my_string,separator='['):
     splited_string = my_string.split(sep=separator)
