@@ -5,7 +5,14 @@ from PIL import Image
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import xlsxwriter 
+import csv
 
+def write_on_csv(list_of_tuples,pathname):
+    with open(pathname,'w') as out:
+        my_csv=csv.writer(out)
+        my_csv.writerow(['Uniprot Entry','Accession Name'])
+        for row in list_of_tuples:
+            my_csv.writerow(row)
 
 def read_from_xlx(pathname, lbl_2d=False):
     if lbl_2d:

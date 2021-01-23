@@ -61,9 +61,9 @@ def get_proteins_based_on_uniprot(proteins, pathname=None, write_flag=False):
         pathname = 'proteins.csv'
         
     df=pd.DataFrame()
+    proteins_go_dict = dict()
     for index,entry in enumerate(proteins):
         data = get_uniprot(query=entry[0],query_type='ACC') # do the query to the UniProt
-
         organism = []
         molecular_functions = []
         molecular_functions_id = []
@@ -71,16 +71,17 @@ def get_proteins_based_on_uniprot(proteins, pathname=None, write_flag=False):
         biological_processes_id = []
         cellular_components = []
         cellular_components_id = []
+        keywords = []
 
         # entry name
         df.loc[index,'Uniprot Entry']=entry[0]
+        print(entry[0])
+        if entry[0] not in proteins_go_dict:
+            proteins_go_dict[entry[0]] = None
         
         for line in data:
             if 'ID   ' in line: # Accession name of protein
                 line = line.strip().replace('ID   ','').split('   ')
-                if line[0] != entry[1]:
-                    print(line[0])
-                    print(entry[1])
                 df.loc[index,'Accession Name']=line[0]
 
             if 'DE   RecName: Full=' in line:   # Full name of protein
@@ -91,6 +92,11 @@ def get_proteins_based_on_uniprot(proteins, pathname=None, write_flag=False):
                 line = line.strip().replace('OS   ','').replace('.','')
                 organism.append(line)
                 df.loc[index,'Organism']=(", ".join(list(set(organism))))
+
+            if 'KW   ' in line: # Keywords
+                line = line.strip().replace('KW   ','').replace('.','').split(';')
+                keywords.append(line)
+                df.loc[index,'Keywords']=(", ".join(list(set(molecular_functions))))
 
             # Gene Ontology infos
             if 'DR   GO; GO:' in line:           
@@ -118,8 +124,12 @@ def get_proteins_based_on_uniprot(proteins, pathname=None, write_flag=False):
                     df.loc[index,'GO ID CC']=(", ".join(list(set(cellular_components_id))))
 
                 else:
-                    print(subgraph_of_GO)    
+                    print(subgraph_of_GO)   
+
+        # make a dictionary: {protein code: (list of GO ids of molecular functions, list of GO ids of biological processes, list of GO ids of cellular components)} 
+        proteins_go_dict[entry[0]] = (molecular_functions_id,biological_processes_id,cellular_components_id)
+
     if write_flag:
         write_uniprot_on_csv(pathname,df)
-    return df    
+    return df, proteins_go_dict    
             
