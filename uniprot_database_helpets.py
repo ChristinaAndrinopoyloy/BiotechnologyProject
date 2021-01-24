@@ -62,6 +62,8 @@ def get_proteins_based_on_uniprot(proteins, pathname=None, write_flag=False):
         
     df=pd.DataFrame()
     proteins_go_dict = dict()
+    keywords_dict = dict()
+
     for index,entry in enumerate(proteins):
         data = get_uniprot(query=entry[0],query_type='ACC') # do the query to the UniProt
         organism = []
@@ -78,6 +80,8 @@ def get_proteins_based_on_uniprot(proteins, pathname=None, write_flag=False):
         print(entry[0])
         if entry[0] not in proteins_go_dict:
             proteins_go_dict[entry[0]] = None
+        if entry[0] not in keywords_dict:
+            keywords_dict[entry[0]] = None    
         
         for line in data:
             if 'ID   ' in line: # Accession name of protein
@@ -95,8 +99,10 @@ def get_proteins_based_on_uniprot(proteins, pathname=None, write_flag=False):
 
             if 'KW   ' in line: # Keywords
                 line = line.strip().replace('KW   ','').replace('.','').split(';')
-                keywords.append(line)
-                df.loc[index,'Keywords']=(", ".join(list(set(molecular_functions))))
+                for kw in line:
+                    if kw != '':
+                        keywords.append(kw)
+                df.loc[index,'Keywords']=(", ".join(list(set(keywords))))
 
             # Gene Ontology infos
             if 'DR   GO; GO:' in line:           
@@ -128,8 +134,9 @@ def get_proteins_based_on_uniprot(proteins, pathname=None, write_flag=False):
 
         # make a dictionary: {protein code: (list of GO ids of molecular functions, list of GO ids of biological processes, list of GO ids of cellular components)} 
         proteins_go_dict[entry[0]] = (molecular_functions_id,biological_processes_id,cellular_components_id)
+        keywords_dict[entry[0]] = ", ".join(list(set(keywords)))
 
     if write_flag:
         write_uniprot_on_csv(pathname,df)
-    return df, proteins_go_dict    
+    return df, proteins_go_dict, keywords_dict    
             

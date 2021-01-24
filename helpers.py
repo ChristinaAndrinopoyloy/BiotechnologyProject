@@ -6,6 +6,7 @@ from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import xlsxwriter 
 import csv
+import go_helpers as go
 
 def write_on_csv(list_of_tuples,pathname):
     with open(pathname,'w') as out:
@@ -13,6 +14,15 @@ def write_on_csv(list_of_tuples,pathname):
         my_csv.writerow(['Uniprot Entry','Accession Name'])
         for row in list_of_tuples:
             my_csv.writerow(row)
+
+
+def from_csv_to_dict(pathname):
+    my_dict = dict()
+    with open(pathname, mode='r') as infile:
+        my_csv = csv.reader(infile)
+        my_dict = {rows[0]:rows[1].replace('{','').replace('}','').replace('\'','') for rows in my_csv}
+    return my_dict    
+
 
 def read_from_xlx(pathname, lbl_2d=False):
     if lbl_2d:
@@ -159,3 +169,13 @@ def find_description_from_accession_name(proteins, df, flag_2dge=False):
         description = row[descriptin_index].values[0]
         info_protein.append((prot,description))
     return info_protein    
+
+
+def get_values_from_dict(my_dict, godag):
+    temp_list = []
+    all_ancestors = []
+    for key, value in my_dict.items():
+        for v in value.strip().replace(' ','').split(','):
+            temp_list.append(go.get_name_of_GOid(v,godag))
+    [all_ancestors.append(item) for item in temp_list if item not in all_ancestors]   # remove duplicates
+    return all_ancestors
