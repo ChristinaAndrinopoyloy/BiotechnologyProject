@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import os.path
 from os import path
 from PIL import Image
 from wordcloud import WordCloud
@@ -7,6 +8,8 @@ import matplotlib.pyplot as plt
 import xlsxwriter 
 import csv
 import go_helpers as go
+from collections import Counter
+
 
 def write_on_csv(list_of_tuples,pathname):
     with open(pathname,'w') as out:
@@ -50,11 +53,14 @@ def write_on_excel(pathname, mylist):
 
 
 def merge_excels(excel_1, excel_2, excel_3, write_flag=False, pathname=None):
-    df_1 = read_from_xlx(excel_1)[['Accession Name']]
     df_2 = read_from_xlx(excel_2)[['Accession Name']]
     df_3 = read_from_xlx(excel_3)[['Accession Name']]
 
-    dfs = [df_1, df_2, df_3]
+    if path.exists(excel_1):
+        df_1 = read_from_xlx(excel_1)[['Accession Name']]
+        dfs = [df_1, df_2, df_3]
+    else:
+        dfs = [df_2, df_3]    
     total_df = pd.concat(dfs)
     total_df.drop_duplicates(subset=['Accession Name'])
 
@@ -179,3 +185,52 @@ def get_values_from_dict(my_dict, godag):
             temp_list.append(go.get_name_of_GOid(v,godag))
     [all_ancestors.append(item) for item in temp_list if item not in all_ancestors]   # remove duplicates
     return all_ancestors
+
+
+def intersection_of_lists(list1, list2): 
+    returned_list = [item for item in list1 if item in list2] 
+    return returned_list 
+
+
+def flatten_of_list(my_list):
+    returned_list = [term for sublist in my_list for term in sublist]   # flatten
+    return returned_list
+
+
+def remove_duplicates_of_list(my_list):
+    returned_list = []  
+    [returned_list.append(term) for term in my_list if term not in returned_list]  
+    return returned_list
+
+
+def split_items_of_list(my_list):
+    returned_list = []
+    for item in my_list:
+        if not item != item:
+            item = item.strip().replace(' ','').split(',')
+            for i in item:
+                returned_list.append(i)
+    return returned_list    
+
+
+def barplot(my_dict,title):
+    fig, ax = plt.subplots()
+    plt.barh(*zip(*my_dict.items()),color='#39c0ba', align='center')
+    ax.set_xlabel('Number of Proteins')
+    ax.set_title(title)
+    plt.tight_layout()
+    plt.show()
+
+
+def split_string_into2(my_string):
+    my_string = my_string[:40] + '-\n' + my_string[40:]
+    return my_string
+
+
+def statistics_routine(my_list, godag, title):
+    for i in range(len(my_list)):
+        my_list[i] = go.get_name_of_GOid(my_list[i], godag)
+        if len(my_list[i]) > 40:
+            my_list[i] = split_string_into2(my_list[i])
+    occurances = Counter(my_list)
+    barplot(occurances, title=title)    

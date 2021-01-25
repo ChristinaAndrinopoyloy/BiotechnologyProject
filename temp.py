@@ -12,5 +12,5 @@ goid = 'GO:0008150'
 # prtfmt = '{GO_name}'
 # print(prtfmt.format(**ntgo._asdict()))
 
-lala = go.get_children(goid, godag, level=2)
+lala = go.get_children(goid, godag, level=1)
 print(len(lala))

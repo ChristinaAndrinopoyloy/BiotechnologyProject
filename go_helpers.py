@@ -46,9 +46,8 @@ def get_popular_go_terms(my_dict):
     print(anc_counter)
     print(len(my_dict))
 
-def find_common_ancestors(go_ids, godag):
-    print(go_ids)
-    return deepest_common_ancestor(go_ids, godag)
+# def find_common_ancestors(go_ids, godag):
+#     return deepest_common_ancestor(go_ids, godag)
 
 
 def get_children(go_id, godag, level=1):
@@ -64,17 +63,11 @@ def get_children(go_id, godag, level=1):
             for child in children:
                 if child in all_hierarchy:
                     temp_children.append(list(all_hierarchy[child]))
-                    print(len(temp_children))
             level_counter += 1
-            children = temp_children
-            # print(children)
+            children = [go_term for sublist in temp_children for go_term in sublist]    
             all_children.append(children)
-            # print(all_children)
         if level > 1:
-            print('hello i lve U would U tell me your name')
             children = [go_term for sublist in all_children for go_term in sublist]    
-            print(len(children))
-
     else:
         return None
     return children    

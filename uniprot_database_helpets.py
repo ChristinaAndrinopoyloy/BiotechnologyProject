@@ -11,11 +11,13 @@
 import urllib
 from bs4 import BeautifulSoup
 import pandas as pd
+from progress.bar import FillingCirclesBar
+
 
 # get data from uniprot
 def get_uniprot (query='',query_type='PDB_ID'):
-    #query_type must be: "PDB_ID" or "ACC"
-    url = 'https://www.uniprot.org/uploadlists/' #This is the webser to retrieve the Uniprot data
+    flag = False
+    url = 'https://www.uniprot.org/uploadlists/'
     params = {
     'from':query_type,
     'to':'ACC',
@@ -25,10 +27,21 @@ def get_uniprot (query='',query_type='PDB_ID'):
     data = urllib.parse.urlencode(params)
     data = data.encode('ascii')
     request = urllib.request.Request(url, data)
-    with urllib.request.urlopen(request) as response:
-        res = response.read()
-        page=BeautifulSoup(res,features="lxml").get_text()
-        page=page.splitlines()
+    while True:
+        try:
+            if flag:
+                print('AGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIIIIIIIIIIIIIIIINN')
+                flag = False
+            with urllib.request.urlopen(request) as response:
+                res = response.read()
+                page=BeautifulSoup(res,features="lxml").get_text()
+                page=page.splitlines()
+                break
+        except:
+            flag = True
+            print(query)
+            print('EXCEPTIONNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN')
+            pass    
     return page
 
 
@@ -39,7 +52,7 @@ def write_uniprot_on_csv(pathname, df):
 
 # return code for a protein
 def get_code_from_accession(accession):
-    uniprot_answer = get_uniprot (query=accession,query_type='ACC') # do the query to the UniProt
+    uniprot_answer = get_uniprot(query=accession,query_type='ACC') # do the query to the UniProt
     flag = False
     for line in uniprot_answer:
         if 'AC   ' in line: # Accession name of protein
@@ -64,6 +77,7 @@ def get_proteins_based_on_uniprot(proteins, pathname=None, write_flag=False):
     proteins_go_dict = dict()
     keywords_dict = dict()
 
+    bar = FillingCirclesBar('Get UniProt Data', max=len(proteins))
     for index,entry in enumerate(proteins):
         data = get_uniprot(query=entry[0],query_type='ACC') # do the query to the UniProt
         organism = []
@@ -77,7 +91,6 @@ def get_proteins_based_on_uniprot(proteins, pathname=None, write_flag=False):
 
         # entry name
         df.loc[index,'Uniprot Entry']=entry[0]
-        print(entry[0])
         if entry[0] not in proteins_go_dict:
             proteins_go_dict[entry[0]] = None
         if entry[0] not in keywords_dict:
@@ -131,11 +144,13 @@ def get_proteins_based_on_uniprot(proteins, pathname=None, write_flag=False):
 
                 else:
                     print(subgraph_of_GO)   
-
+          
         # make a dictionary: {protein code: (list of GO ids of molecular functions, list of GO ids of biological processes, list of GO ids of cellular components)} 
         proteins_go_dict[entry[0]] = (molecular_functions_id,biological_processes_id,cellular_components_id)
         keywords_dict[entry[0]] = ", ".join(list(set(keywords)))
-
+        bar.next()
+    bar.finish()  
+    
     if write_flag:
         write_uniprot_on_csv(pathname,df)
     return df, proteins_go_dict, keywords_dict    
