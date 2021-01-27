@@ -1,3 +1,8 @@
+##########################################################################################
+#                               Andrinopoulou Christina                                  #
+#                                             ds2200013                                  #
+##########################################################################################
+
 import pandas as pd
 import numpy as np
 import os.path
@@ -8,7 +13,6 @@ import matplotlib.pyplot as plt
 import xlsxwriter 
 import csv
 import go_helpers as go
-from collections import Counter
 
 
 def write_on_csv(list_of_tuples,pathname):
@@ -213,7 +217,7 @@ def split_items_of_list(my_list):
     return returned_list    
 
 
-def barplot(my_dict,title):
+def barplot(my_dict, title):
     fig, ax = plt.subplots()
     plt.barh(*zip(*my_dict.items()),color='#39c0ba', align='center')
     ax.set_xlabel('Number of Proteins')
@@ -222,15 +226,14 @@ def barplot(my_dict,title):
     plt.show()
 
 
-def split_string_into2(my_string):
-    my_string = my_string[:40] + '-\n' + my_string[40:]
+def multiple_barplot(df, title):
+    df.plot.barh(logx=True)
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.tight_layout()
+    title = title.replace('_', ' ')
+    plt.title(title)
+    plt.show()
+
+def split_string_into2(my_string,index=40):
+    my_string = my_string[:index] + '-\n' + my_string[index:]
     return my_string
-
-
-def statistics_routine(my_list, godag, title):
-    for i in range(len(my_list)):
-        my_list[i] = go.get_name_of_GOid(my_list[i], godag)
-        if len(my_list[i]) > 40:
-            my_list[i] = split_string_into2(my_list[i])
-    occurances = Counter(my_list)
-    barplot(occurances, title=title)    

@@ -1,3 +1,8 @@
+##########################################################################################
+#                               Andrinopoulou Christina                                  #
+#                                             ds2200013                                  #
+##########################################################################################
+
 import os
 from goatools.obo_parser import GODag
 from goatools.base import get_godag
@@ -71,3 +76,5 @@ def get_children(go_id, godag, level=1):
     else:
         return None
     return children    
+
+

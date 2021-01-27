@@ -1,3 +1,8 @@
+##########################################################################################
+#                               Andrinopoulou Christina                                  #
+#                                             ds2200013                                  #
+##########################################################################################
+
 import uniprot_database_helpets as uni
 import go_helpers as go
 import helpers as hlp
@@ -14,17 +19,17 @@ avaliable_brain_parts = ['cerebellum', 'cortex', 'hippocampus', 'hypothalamus', 
 @click.option("--pipeline", type=click.Choice(avaliable_pipelines, case_sensitive=False), default='full', help="The pipeline of the program", show_default=True)
 @click.option("--approach", type=click.Choice(avaliable_approaches, case_sensitive=False), default='unique', help="The approach that used in order to find the proteins of the two methods: 2DGE, HRMS", show_default=True)
 @click.option("--brain_part", type=click.Choice(avaliable_brain_parts, case_sensitive=False), default='cerebellum', help="Brain part", show_default=True)
+@click.option('--expand_labels', is_flag=False, help='Give the opportunity to replace a GO term with the corresponding children terms', show_default=True)
+def protein_GO_relationship(pipeline, approach, brain_part, expand_labels):
+    '''A python program that discovers the relationship between some proteins and the Gene Ontology'''
 
-
-def protein_GO_relationship(pipeline, approach, brain_part):
-    '''A python program for the relationship of some proteins with the Gene Ontology'''
-
-    # find the excel files and the pathname that we are going to use later on
+    # find the excel files and the pathnames that we are going to use later on
     common_name, \
     unique_name1, unique_name2, \
     merged_pathname, \
     pathname, pathname_all_infos, pathname_all_infos2, \
-    mf_pathname, bp_pathname, cc_pathname, kw_pathname = rout.find_the_appropriate_files(approach, brain_part)
+    mf_pathname, bp_pathname, cc_pathname, kw_pathname, \
+    statistical_pathname_mf, statistical_pathname_bp, statistical_pathname_cc = rout.find_the_appropriate_files(approach, brain_part)
 
     # Gene Ontology
     godag = go.load_basic_go()
@@ -109,7 +114,25 @@ def protein_GO_relationship(pipeline, approach, brain_part):
         # take all the GO terms of a specific level of the DAG
         bp_labels = go.get_children('GO:0008150', godag, level=1)
         mf_labels = go.get_children('GO:0003674', godag, level=1)
-        cc_labels = go.get_children('GO:0005575', godag, level=1)
+        cc_labels = go.get_children('GO:0005575', godag, level=2)
+    
+        # take the children of some go terms based on the user's preferences
+        if expand_labels:
+            subontologies, go_terms = rout.speak_with_the_user(bp_labels, mf_labels, cc_labels, godag)
+
+            for i in range(len(subontologies)):     
+                terms = go_terms[i]
+                for trm in terms:       
+                    children = go.get_children(trm, godag, level=1)
+                    if trm in bp_labels:
+                        bp_labels.remove(trm)
+                        bp_labels.extend(children)
+                    if trm in mf_labels:
+                        mf_labels.remove(trm)
+                        mf_labels.extend(children)
+                    if trm in cc_labels:
+                        cc_labels.remove(trm)
+                        cc_labels.extend(children)
 
         molecular_function_ancestors = hlp.from_csv_to_dict(pathname=mf_pathname)
         biological_processes_ancestors = hlp.from_csv_to_dict(pathname=bp_pathname)
@@ -169,22 +192,22 @@ def protein_GO_relationship(pipeline, approach, brain_part):
 
 
     # Statistics Step: make bar plots
-    if pipeline == 'statistics' or pipeline == 'full':
+    if pipeline == 'statistics' or pipeline == 'full' or pipeline == 'analysis':
         print('Statistics step')      
 
         df = pd.read_csv(pathname_all_infos2)
 
         biological_process_labels = df["Biological Process Label"].tolist()
-        molecular_function_labels = df["Molecular Function Label"]
-        cellular_component_labels = df["Cellular Component Label"]
+        molecular_function_labels = df["Molecular Function Label"].tolist()
+        cellular_component_labels = df["Cellular Component Label"].tolist()
 
         biological_process_labels = hlp.split_items_of_list(biological_process_labels)
         molecular_function_labels = hlp.split_items_of_list(molecular_function_labels)
         cellular_component_labels = hlp.split_items_of_list(cellular_component_labels)
 
-        hlp.statistics_routine(biological_process_labels, godag, title='Biological Process')
-        hlp.statistics_routine(molecular_function_labels, godag, title='Molecular Function')
-        hlp.statistics_routine(cellular_component_labels, godag, title='Cellular Component')
+        rout.statistics_routine(molecular_function_labels, godag, statistical_pathname_mf, title='Molecular Function')
+        rout.statistics_routine(cellular_component_labels, godag, statistical_pathname_cc, title='Cellular Component')
+        rout.statistics_routine(biological_process_labels, godag, statistical_pathname_bp, title='Biological Process')
 
 
     print('END')   
