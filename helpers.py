@@ -11,6 +11,7 @@ from PIL import Image
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import xlsxwriter 
+import PyPDF2 
 import csv
 import go_helpers as go
 
@@ -237,3 +238,80 @@ def multiple_barplot(df, title):
 def split_string_into2(my_string,index=40):
     my_string = my_string[:index] + '-\n' + my_string[index:]
     return my_string
+
+
+def correct_brainpart(brain_part):
+    if brain_part == 'Cerebellum':
+        brain_part = 'Cerebellum'
+    if brain_part == 'Cortex':
+        brain_part = 'Cortex' 
+    if brain_part == 'Hipocampus':
+        brain_part = 'Hippocampus'     
+    if brain_part == 'Hipothalamus':
+        brain_part = 'Hypothalamus'
+    if brain_part == 'Medulla':
+        brain_part = 'Medulla'
+    if brain_part == 'Mid_Brain':
+        brain_part = 'Mid Brain'
+    if brain_part == 'Olfactory_balb':
+        brain_part = 'Olfactory Bulb'  
+    return brain_part    
+
+
+def get_brainpart_based_on_index(index):
+    if index == 7:
+        return 'Brainstem'
+    if index == 8:
+        return 'Cerebellum'  
+    if index == 9:
+        return 'Corpus Callosum'
+    if index == 10:
+        return 'Motor Cortex'
+    if index == 11:
+        return 'Olfactory Bulb'
+    if index == 12:
+        return 'Optic Nerve'  
+    if index == 13:
+        return 'Prefrontal Cortex'
+    if index == 14:
+        return 'Striatum'    
+    if index == 15:
+        return 'Thalamus'
+    if index == 16:
+        return 'Ventral Hippocampus'    
+    else:
+        print('ERRORRRRRRRRRRRR')
+        return None              
+
+
+def read_table_from_pdf(filename):  
+    returned_codes = []
+    pdf_object = open(filename, 'rb') 
+    pdf_reader = PyPDF2.PdfFileReader(pdf_object) 
+    pages = pdf_reader.numPages
+
+    # for each page get the content 
+    for i in range(pages):
+        page = pdf_reader.getPage(i) 
+        text = page.extractText()
+        line = text.replace('\n', ' ').split('gi|')
+        for j in range(len(line)):
+            code = line[j].split(' ')
+            code = code[0]
+            # print(code)
+            digits = []
+            for s in code:
+                if s.isdigit():
+                    digits.append(s)
+                else:
+                    break    
+            code = ''.join([str(elem) for elem in digits]) 
+            code = 'gi|'+code
+            # print(code)
+            returned_codes.append(code)
+
+    # closing the pdf file object 
+    pdf_object.close() 
+    returned_codes.remove('gi|')
+    returned_codes = [c for c in returned_codes if len(c) > 4]
+    return returned_codes

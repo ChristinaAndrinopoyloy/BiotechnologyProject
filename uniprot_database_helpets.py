@@ -30,7 +30,6 @@ def get_uniprot (query='',query_type='PDB_ID'):
     while True:
         try:
             if flag:
-                print('AGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIIIIIIIIIIIIIIIINN')
                 flag = False
             with urllib.request.urlopen(request) as response:
                 res = response.read()
@@ -40,7 +39,6 @@ def get_uniprot (query='',query_type='PDB_ID'):
         except:
             flag = True
             print(query)
-            print('EXCEPTIONNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN')
             pass    
     return page
 
