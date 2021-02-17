@@ -1,18 +1,7 @@
-import go_helpers as go
-
-from goatools.gosubdag.gosubdag import GoSubDag
-from goatools.base import get_godag
-
-godag = get_godag('go-basic.obo', optional_attrs='relationship')
-
-goid = 'GO:0008150'
-
-# gosubdag = GoSubDag(goid, godag, relationships=True, prt=False)
-# ntgo = gosubdag.go2nt[goid]
-# prtfmt = '{GO_name}'
-# print(prtfmt.format(**ntgo._asdict()))
-
-# lala = go.get_children(goid, godag, level=1)
-# print(len(lala))
-aa = godag[goid]
-print(aa.)
+for i in range(10):
+    print(f'---------------------i={i}')
+    for j in range(12):
+        if j == 2 or j ==4 or j == 6:
+            continue
+        else:
+            print(f'j={j}')

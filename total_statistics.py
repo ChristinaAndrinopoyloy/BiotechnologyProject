@@ -7,15 +7,26 @@ import helpers as hlp
 import pandas as pd
 import click
 
-avaliable_approaches = ['unique', 'simple']
+avaliable_approaches = ['unique', 'simple', 'bonus_papers']
 avaliable_GO = ['Biological_Process', 'Molecular_Function', 'Cellular_Component']
 @click.command()
 @click.option("--approach", type=click.Choice(avaliable_approaches, case_sensitive=False), default='simple', help="The approach that used in order to find the proteins of the two methods: 2DGE, HRMS", show_default=True)
-@click.option("--go", type=click.Choice(avaliable_GO, case_sensitive=False), default='Biological Process', help="SubDAG of Gene Ontology", show_default=True)
-def total_statistics(approach, go):
+@click.option("--go", type=click.Choice(avaliable_GO, case_sensitive=False), default='Biological_Process', help="SubDAG of Gene Ontology", show_default=True)
+def total_statistics(approach, go, paper_no=2):
     '''A python program that creates barplots for all the brain parts'''
 
-    brain_parts = ['Cerebellum', 'Cortex', 'Hipocampus', 'Hipothalamus', 'Medulla', 'Mid_Brain', 'Olfactory_balb']
+    if approach == 'bonus_papers':
+        bonus_papers_flag = True
+        paper_no = input("1 for paper jung2017 and 2 for paper sharma: ") 
+        if paper_no == str(1):
+            brain_parts = ['Mid_Brain','Cerebellum','Cortex_Subplate','Medulla','Striatum','Thalamus','Olfactory_Bulb','Cortex','Pallidum','Hypothalamus']
+        else:      
+            brain_parts = ['Brainstem','Cerebellum','Corpus_Callosum','Motor_Cortex','Olfactory_Bulb','Optic_Nerve','Prefrontal_Cortex','Striatum','Thalamus','Ventral_Hippocampus']
+        approach = approach+'/PAPER'+str(paper_no)
+        print(approach)
+    else:
+        bonus_papers_flag = False
+        brain_parts = ['Cerebellum', 'Cortex', 'Hipocampus', 'Hipothalamus', 'Medulla', 'Mid_Brain', 'Olfactory_balb']
 
     statistics_mf = []
     statistics_for_all = dict()
@@ -55,7 +66,10 @@ def total_statistics(approach, go):
     df=pd.DataFrame.from_dict(statistics_for_all,orient='index').transpose()
     df = df.transpose()
     df = df.fillna(0)
-    df.columns =['Cerebellum', 'Cortex', 'Hippocampus', 'Hypothalamus', 'Medulla', 'MidBrain', 'Olfactory Bulb']         
+    if bonus_papers_flag:
+        df.columns = ['Brainstem','Cerebellum','Corpus_Callosum','Motor_Cortex','Olfactory_Bulb','Optic_Nerve','Prefrontal_Cortex','Striatum','Thalamus','Ventral_Hippocampus']
+    else:
+        df.columns = ['Cerebellum', 'Cortex', 'Hippocampus', 'Hypothalamus', 'Medulla', 'MidBrain', 'Olfactory Bulb']         
     df.to_csv('temp.csv',index=True)
 
     hlp.multiple_barplot(df, title=go)

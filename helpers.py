@@ -228,7 +228,7 @@ def barplot(my_dict, title):
 
 
 def multiple_barplot(df, title):
-    df.plot.barh(logx=True)
+    df.plot.barh(logx=False)
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
     plt.tight_layout()
     title = title.replace('_', ' ')
@@ -264,24 +264,48 @@ def get_brainpart_based_on_index(index):
     if index == 8:
         return 'Cerebellum'  
     if index == 9:
-        return 'Corpus Callosum'
+        return 'Corpus_Callosum'
     if index == 10:
-        return 'Motor Cortex'
+        return 'Motor_Cortex'
     if index == 11:
-        return 'Olfactory Bulb'
+        return 'Olfactory_Bulb'
     if index == 12:
-        return 'Optic Nerve'  
+        return 'Optic_Nerve'  
     if index == 13:
-        return 'Prefrontal Cortex'
+        return 'Prefrontal_Cortex'
     if index == 14:
         return 'Striatum'    
     if index == 15:
         return 'Thalamus'
     if index == 16:
-        return 'Ventral Hippocampus'    
+        return 'Ventral_Hippocampus'    
     else:
         print('ERRORRRRRRRRRRRR')
         return None              
+
+
+def get_brainpart_based_on_index2(index):
+    if index == 1:
+        return 'Mid_Brain'
+    if index == 2:
+        return 'Cortex_Subplate'
+    if index == 3:
+        return 'Medulla'
+    if index == 4:
+        return 'Striatum'
+    if index == 5:
+        return 'Cerebellum'
+    if index == 6:
+        return 'Thalamus'
+    if index == 7:
+        return 'Olfactory_Bulb'
+    if index == 8:
+        return 'Cortex'
+    if index == 9:
+        return 'Pallidum'
+    if index == 10:
+        return 'Hypothalamus'
+
 
 
 def read_table_from_pdf(filename):  

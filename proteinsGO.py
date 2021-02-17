@@ -7,29 +7,40 @@ import uniprot_database_helpets as uni
 import go_helpers as go
 import helpers as hlp
 import routines as rout
+import bonus_papers as papers
 import pandas as pd
 import click
 import numpy as np
 from progress.bar import FillingCirclesBar
 
-avaliable_pipelines = ['full', 'go', 'analysis', 'statistics']
+avaliable_pipelines = ['full', 'go', 'analysis', 'statistics', 'bonus_paper']
 avaliable_approaches = ['unique', 'simple']
 avaliable_brain_parts = ['cerebellum', 'cortex', 'hippocampus', 'hypothalamus', 'medulla', 'mid_brain', 'olfactory_bulb']
+avaliable_bonus_papers = ['1', '2']
 @click.command()
 @click.option("--pipeline", type=click.Choice(avaliable_pipelines, case_sensitive=False), default='full', help="The pipeline of the program", show_default=True)
 @click.option("--approach", type=click.Choice(avaliable_approaches, case_sensitive=False), default='unique', help="The approach that used in order to find the proteins of the two methods: 2DGE, HRMS", show_default=True)
 @click.option("--brain_part", type=click.Choice(avaliable_brain_parts, case_sensitive=False), default='cerebellum', help="Brain part", show_default=True)
+@click.option("--paper_no", type=click.Choice(avaliable_bonus_papers, case_sensitive=False), default='2', help="Paper1:jung2017 and Paper2:sharma", show_default=True)
 @click.option('--expand_labels', is_flag=False, help='Give the opportunity to replace a GO term with the corresponding children terms', show_default=True)
-def protein_GO_relationship(pipeline, approach, brain_part, expand_labels):
+def protein_GO_relationship(pipeline, approach, brain_part, paper_no, expand_labels):
     '''A python program that discovers the relationship between some proteins and the Gene Ontology'''
 
     # find the excel files and the pathnames that we are going to use later on
-    common_name, \
-    unique_name1, unique_name2, \
-    merged_pathname, \
-    pathname, pathname_all_infos, pathname_all_infos2, \
-    mf_pathname, bp_pathname, cc_pathname, kw_pathname, \
-    statistical_pathname_mf, statistical_pathname_bp, statistical_pathname_cc = rout.find_the_appropriate_files(approach, brain_part)
+    if pipeline != 'bonus_paper':
+        common_name, \
+        unique_name1, unique_name2, \
+        merged_pathname, \
+        pathname, pathname_all_infos, pathname_all_infos2, \
+        mf_pathname, bp_pathname, cc_pathname, kw_pathname, \
+        statistical_pathname_mf, statistical_pathname_bp, statistical_pathname_cc = rout.find_the_appropriate_files(approach, brain_part)
+    else:
+        approach = 'BONUS_PAPERS'
+        brain_part = 'all'
+        _, _, _, _, pathname, pathname_all_infos, pathname_all_infos2, \
+        mf_pathname, bp_pathname, cc_pathname, kw_pathname, \
+        statistical_pathname_mf, statistical_pathname_bp, statistical_pathname_cc = rout.find_the_appropriate_files(approach, brain_part, paper=paper_no)
+
 
     # Gene Ontology
     godag = go.load_basic_go()
@@ -60,10 +71,49 @@ def protein_GO_relationship(pipeline, approach, brain_part, expand_labels):
         bar.finish()    
         hlp.write_on_csv(list_of_tuples=proteins, pathname=pathname)    # save the results    
    
+    if pipeline == 'bonus_paper':
+        if paper_no == str(1):
+            brainpart_proteins_dictionary = papers.paper1_routine()
+        else:      
+            brainpart_proteins_dictionary = papers.paper2_routine()
+
+        df_temp = pd.DataFrame.from_dict(brainpart_proteins_dictionary, orient='index')
+        df_temp.to_csv('temp.csv')
+
     # GO Step
-    if pipeline == 'go' or pipeline == 'full':
+    if pipeline == 'go' or pipeline == 'full' or pipeline == 'bonus_paper':
+        print(pathname)
         proteins_df = pd.read_csv(pathname)
-        proteins = proteins_df.values.tolist()
+        proteins = proteins_df['Uniprot Entry'].values.tolist()
+        if pipeline == 'bonus_paper':
+            if paper_no == str(1):
+                bar = FillingCirclesBar('Find the protein code for each protein, based on the accession name', max=len(proteins))
+                # find the uniprot entry code
+                proteins2 = []
+                for protein in proteins:
+                    code, old_protein = uni.get_code_from_accession(protein)
+                    if old_protein == None:
+                        proteins2.append((code,protein))
+                    else:
+                        print(f'\nThe protein {old_protein} was deleted!')
+                    bar.next()
+                bar.finish()    
+                hlp.write_on_csv(list_of_tuples=proteins2, pathname=pathname)    # save the results 
+            else:
+                temp_proteins = proteins
+                proteins = []
+                bar = FillingCirclesBar('Check for obselete proteins', max=len(temp_proteins))
+                for prot in temp_proteins:
+                    if uni.check_protein_existance(prot) == prot:
+                        proteins.append(prot)
+                    else:
+                        print('hello')
+                    bar.next()
+                bar.finish()    
+
+        print(proteins)
+        proteins = hlp.remove_duplicates_of_list(proteins)
+        print(len(proteins))
               
         # find the GO terms for each protein      
         protein_table, proteins_GO_dict, keywords_dict = uni.get_proteins_based_on_uniprot(proteins, write_flag=True, pathname=pathname_all_infos)
@@ -110,11 +160,11 @@ def protein_GO_relationship(pipeline, approach, brain_part, expand_labels):
         df_kw.to_csv(kw_pathname, header=False)
 
     # Analysis Step
-    if pipeline == 'analysis' or pipeline == 'full':
+    if pipeline == 'analysis' or pipeline == 'full' or pipeline == 'bonus_paper':
         # take all the GO terms of a specific level of the DAG
         bp_labels = go.get_children('GO:0008150', godag, level=1)
         mf_labels = go.get_children('GO:0003674', godag, level=1)
-        cc_labels = go.get_children('GO:0005575', godag, level=2)
+        cc_labels = go.get_children('GO:0005575', godag, level=1)
     
         # take the children of some go terms based on the user's preferences
         if expand_labels:
@@ -192,22 +242,47 @@ def protein_GO_relationship(pipeline, approach, brain_part, expand_labels):
 
 
     # Statistics Step: make bar plots
-    if pipeline == 'statistics' or pipeline == 'full' or pipeline == 'analysis':
+    if pipeline == 'statistics' or pipeline == 'full' or pipeline == 'analysis' or pipeline == 'bonus_paper':
         print('Statistics step')      
-
         df = pd.read_csv(pathname_all_infos2)
+        print(pathname_all_infos2)
 
-        biological_process_labels = df["Biological Process Label"].tolist()
-        molecular_function_labels = df["Molecular Function Label"].tolist()
-        cellular_component_labels = df["Cellular Component Label"].tolist()
+        if pipeline == 'bonus_paper':
+            col_names = list(df.columns)
+            for key, value in brainpart_proteins_dictionary.items():    # for each brain part
+                print('=======================--------------------======================')
+                print(key)
+                print(value)
+                temp_pathname = './MERGED/'+approach+'/PAPER'+str(paper_no)+'/'+key+'/all_infos2.csv'
+                temp_content_of_df = []
+                for index, row in df.iterrows():    # for each protein of the paper
+                    if row['Uniprot Entry'] in value:   # if the protein belongs to the current brain part
+                        temp_content_of_df.append(row.tolist())  # keep it
+                df_brainpart = pd.DataFrame(temp_content_of_df, columns =col_names)   # and save it  
+                df_brainpart.to_csv(temp_pathname)
+                biological_process_labels = df_brainpart["Biological Process Label"].tolist()
+                molecular_function_labels = df_brainpart["Molecular Function Label"].tolist()
+                cellular_component_labels = df_brainpart["Cellular Component Label"].tolist()
 
-        biological_process_labels = hlp.split_items_of_list(biological_process_labels)
-        molecular_function_labels = hlp.split_items_of_list(molecular_function_labels)
-        cellular_component_labels = hlp.split_items_of_list(cellular_component_labels)
+                biological_process_labels = hlp.split_items_of_list(biological_process_labels)
+                molecular_function_labels = hlp.split_items_of_list(molecular_function_labels)
+                cellular_component_labels = hlp.split_items_of_list(cellular_component_labels)
 
-        rout.statistics_routine(molecular_function_labels, godag, statistical_pathname_mf, title='Molecular Function')
-        rout.statistics_routine(cellular_component_labels, godag, statistical_pathname_cc, title='Cellular Component')
-        rout.statistics_routine(biological_process_labels, godag, statistical_pathname_bp, title='Biological Process')
+                rout.statistics_routine(molecular_function_labels, godag, './MERGED/'+approach.upper()+'/PAPER'+str(paper_no)+'/'+key+'/statistical_'+key+'_mf.csv', title='Molecular Function')
+                rout.statistics_routine(cellular_component_labels, godag, './MERGED/'+approach.upper()+'/PAPER'+str(paper_no)+'/'+key+'/statistical_'+key+'_cc.csv', title='Cellular Component')
+                rout.statistics_routine(biological_process_labels, godag, './MERGED/'+approach.upper()+'/PAPER'+str(paper_no)+'/'+key+'/statistical_'+key+'_bp.csv', title='Biological Process')
+        else:    
+            biological_process_labels = df["Biological Process Label"].tolist()
+            molecular_function_labels = df["Molecular Function Label"].tolist()
+            cellular_component_labels = df["Cellular Component Label"].tolist()
+
+            biological_process_labels = hlp.split_items_of_list(biological_process_labels)
+            molecular_function_labels = hlp.split_items_of_list(molecular_function_labels)
+            cellular_component_labels = hlp.split_items_of_list(cellular_component_labels)
+
+            rout.statistics_routine(molecular_function_labels, godag, statistical_pathname_mf, title='Molecular Function')
+            rout.statistics_routine(cellular_component_labels, godag, statistical_pathname_cc, title='Cellular Component')
+            rout.statistics_routine(biological_process_labels, godag, statistical_pathname_bp, title='Biological Process')
 
 
     print('END')   

@@ -9,6 +9,7 @@
 ##########################################################################################
 
 import urllib
+import urllib.request
 from bs4 import BeautifulSoup
 import pandas as pd
 from progress.bar import FillingCirclesBar
@@ -66,6 +67,15 @@ def get_code_from_accession(accession):
     return protein_code, old_protein
 
 
+def check_protein_existance(uniprot_code):
+    uniprot_answer = get_uniprot(query=uniprot_code,query_type='ACC') # do the query to the UniProt
+    if uniprot_answer == []:
+        print(f'The protein {uniprot_code} is obsolete!')
+        return 'Obsolete'
+    else:
+        return uniprot_code    
+
+
 # get infos for some proteins
 def get_proteins_based_on_uniprot(proteins, pathname=None, write_flag=False):
     if write_flag and pathname == None:
@@ -75,9 +85,21 @@ def get_proteins_based_on_uniprot(proteins, pathname=None, write_flag=False):
     proteins_go_dict = dict()
     keywords_dict = dict()
 
-    bar = FillingCirclesBar('Get UniProt Data', max=len(proteins))
+    all_proteins = " ".join(proteins)    
+    data = get_uniprot(query=all_proteins,query_type='ACC') # do the query to the UniProt
+    content = []
+    full_data = []
+    for d in data:
+        if d == '//':
+            full_data.append(content)
+            content = []
+        else:
+            content.append(d)   
+    print(len(full_data)) 
+
+    # bar = FillingCirclesBar('Get UniProt Data', max=len(proteins))
     for index,entry in enumerate(proteins):
-        data = get_uniprot(query=entry[0],query_type='ACC') # do the query to the UniProt
+        # data = get_uniprot(query=entry[0],query_type='ACC') # do the query to the UniProt
         organism = []
         molecular_functions = []
         molecular_functions_id = []
@@ -87,14 +109,14 @@ def get_proteins_based_on_uniprot(proteins, pathname=None, write_flag=False):
         cellular_components_id = []
         keywords = []
 
-        # entry name
-        df.loc[index,'Uniprot Entry']=entry[0]
-        if entry[0] not in proteins_go_dict:
-            proteins_go_dict[entry[0]] = None
-        if entry[0] not in keywords_dict:
-            keywords_dict[entry[0]] = None    
+        df.loc[index,'Uniprot Entry']=entry
+        if entry not in proteins_go_dict:
+            proteins_go_dict[entry] = None
+        if entry not in keywords_dict:
+            keywords_dict[entry] = None    
         
-        for line in data:
+        for line in full_data[index]:
+            print(line)
             if 'ID   ' in line: # Accession name of protein
                 line = line.strip().replace('ID   ','').split('   ')
                 df.loc[index,'Accession Name']=line[0]
@@ -144,10 +166,10 @@ def get_proteins_based_on_uniprot(proteins, pathname=None, write_flag=False):
                     print(subgraph_of_GO)   
           
         # make a dictionary: {protein code: (list of GO ids of molecular functions, list of GO ids of biological processes, list of GO ids of cellular components)} 
-        proteins_go_dict[entry[0]] = (molecular_functions_id,biological_processes_id,cellular_components_id)
-        keywords_dict[entry[0]] = ", ".join(list(set(keywords)))
-        bar.next()
-    bar.finish()  
+        proteins_go_dict[entry] = (molecular_functions_id,biological_processes_id,cellular_components_id)
+        keywords_dict[entry] = ", ".join(list(set(keywords)))
+        # bar.next()
+    # bar.finish()  
     
     if write_flag:
         write_uniprot_on_csv(pathname,df)
