@@ -7062,7 +7062,6 @@ Q99J99,FT,3-mercaptopyruvate sulfurtransferase,Mus musculus (Mouse),"GO:0008152,
 Q9DCS9,NDUBA_MOUSE,NADH dehydrogenase [ubiquinone] 1 beta subcomplex subunit 10,Mus musculus (Mouse),GO:0009987,Olfactory_balb,,"GO:0016020, GO:1902494, GO:0098798, GO:0098796, GO:0043226, GO:0005622"
 Q04447,KCRB_MOUSE,Creatine kinase B-type,Mus musculus (Mouse),"GO:0008152, GO:0009987, GO:0032502, GO:0065007",Olfactory_balb,"GO:0003824, GO:0005488","GO:0044297, GO:0043226, GO:0005622, GO:0042995"
 Q3UGR5,HDHD2_MOUSE,Haloacid dehalogenase-like hydrolase domain-containing protein 2,Mus musculus (Mouse),"GO:0008152, GO:0009987",Olfactory_balb,"GO:0003824, GO:0005488",
-Q99JY9,,,,,Olfactory_balb,,
 P07724,FT,Albumin,Mus musculus (Mouse),"GO:0050896, GO:0009987, GO:0065007, GO:0051179",Olfactory_balb,GO:0005488,"GO:0043226, GO:0005622, GO:0030312"
 P05064,ALDOA_MOUSE,Fructose-bisphosphate aldolase A,Mus musculus (Mouse),"GO:0008152, GO:0009987, GO:0032501, GO:0065007, GO:0022414",Olfactory_balb,"GO:0003824, GO:0005488","GO:0016020, GO:0000785, GO:0043226, GO:0005622"
 Q9CR68,FT,"Cytochrome b-c1 complex subunit Rieske, mitochondrial",Mus musculus (Mouse),"GO:0009987, GO:0008152, GO:0050896",Olfactory_balb,"GO:0003824, GO:0005488","GO:0098798, GO:0016020, GO:1902494, GO:0098796, GO:0043226, GO:0070069, GO:0005622, GO:0031224"

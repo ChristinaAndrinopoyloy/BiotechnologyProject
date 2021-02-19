@@ -95,7 +95,7 @@ def get_proteins_based_on_uniprot(proteins, pathname=None, write_flag=False):
             content = []
         else:
             content.append(d)   
-    print(len(full_data)) 
+    # print(len(full_data)) 
 
     # bar = FillingCirclesBar('Get UniProt Data', max=len(proteins))
     for index,entry in enumerate(proteins):
@@ -116,7 +116,6 @@ def get_proteins_based_on_uniprot(proteins, pathname=None, write_flag=False):
             keywords_dict[entry] = None    
         
         for line in full_data[index]:
-            print(line)
             if 'ID   ' in line: # Accession name of protein
                 line = line.strip().replace('ID   ','').split('   ')
                 df.loc[index,'Accession Name']=line[0]
@@ -175,3 +174,16 @@ def get_proteins_based_on_uniprot(proteins, pathname=None, write_flag=False):
         write_uniprot_on_csv(pathname,df)
     return df, proteins_go_dict, keywords_dict    
             
+
+
+def get_proteinID(query):
+    uniprot_data = get_uniprot(query=query, query_type='ACC')
+    content = []
+    for d in uniprot_data:
+            content.append(d)   
+
+    for line in content:
+        if 'ID   ' in line: # Accession name of protein
+            line = line.strip().replace('ID   ','').split('   ')
+            if len(line[0]) > 2:
+                return line[0]            
