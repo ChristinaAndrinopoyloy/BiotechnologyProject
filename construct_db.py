@@ -211,35 +211,33 @@ def sharma_routine():
         print(f'duplicate {uniprot_entry}')
 
     df_sharma = hlp.read_from_xlx(pathname='AllProteinsSharma.xlsx', lbl_2d=False)
-    bar = FillingCirclesBar('Sharma', max=df_sharma.shape[0])
+    # bar = FillingCirclesBar('Sharma', max=df_sharma.shape[0])
     for index, row in df_sharma.iterrows():
         accession_name = row['Entry name']
         uniprot_entry = row['Entry']
+        brain_parts = []
+        olfactory_balb = row['Olfactory Bulb']
+        cortex = row['Cerebral cortex']
+        hippocampus = row['Hippocampus']
+        thalamus = row['Thalamus']
+        hypothalamus = row['Hypothalamus']
+        cerebellum = row['Cerebellum']
+        medulla = row['Brainstem']
+        if olfactory_balb == 1:
+            brain_parts.append('Olfactory Bulb')
+        if cortex == 1:
+            brain_parts.append('Cortex')
+        if hippocampus == 1:
+            brain_parts.append('Hippocampus')
+        if hypothalamus == 1:
+            brain_parts.append('Hypothalamus')
+        if thalamus == 1:
+            brain_parts.append('Thalamus')
+        if cerebellum == 1:
+            brain_parts.append('Cerebellum')
+        if medulla == 1:
+            brain_parts.append('Medulla')
         if uniprot_entry not in db_content:
-            # print(uniprot_entry)
-            brain_parts = []
-            olfactory_balb = row['Olfactory Bulb']
-            cortex = row['Cerebral cortex']
-            hippocampus = row['Hippocampus']
-            thalamus = row['Thalamus']
-            hypothalamus = row['Hypothalamus']
-            cerebellum = row['Cerebellum']
-            medulla = row['Brainstem']
-            if olfactory_balb == 1:
-                brain_parts.append('Olfactory Bulb')
-            if cortex == 1:
-                brain_parts.append('Cortex')
-            if hippocampus == 1:
-                brain_parts.append('Hippocampus')
-            if hypothalamus == 1:
-                brain_parts.append('Hypothalamus')
-            if thalamus == 1:
-                brain_parts.append('Mid Brain')
-            if cerebellum == 1:
-                brain_parts.append('Cerebellum')
-            if medulla == 1:
-                brain_parts.append('Medulla')
-            # df2, _, _ = uni.get_proteins_based_on_uniprot([protein_code])
             protein_name = row['Protein names'].strip().replace(';','')
             protein = Protein(uniprot_entry=uniprot_entry, 
                             accession_name=accession_name, 
@@ -251,8 +249,22 @@ def sharma_routine():
                             cellular_component=[],
                             paper=[])
             db_content[uniprot_entry] = protein 
-        bar.next()
-    bar.finish()        
+        else:
+            print(db_content[uniprot_entry].brain_parts)
+
+            if type(db_content[uniprot_entry].brain_parts) == str:
+                temp = db_content[uniprot_entry].brain_parts.strip().replace('[','').replace(']','').replace('\'','').replace(' ','').split(',')
+                db_content[uniprot_entry].brain_parts = temp
+            for bp in brain_parts:
+                if bp not in db_content[uniprot_entry].brain_parts:
+                    db_content[uniprot_entry].brain_parts.append(bp)
+            print(db_content[uniprot_entry].brain_parts)
+            print('-'*100)
+
+            # print(db_content[uniprot_entry].brain_parts)   
+
+        # bar.next()
+    # bar.finish()        
 
     #save at a csv all the content
     header = ['Uniprot Entry', 'Accession Name', 'Protein Name', 'Organism', 'Brain Parts', 'Biological Process', 'Molecular Function', 'Cellular Component']
@@ -260,13 +272,6 @@ def sharma_routine():
         writer = csv.writer(csv_file)
         writer.writerow(i for i in header)
         for key, value in db_content.items():
-            if value.accession_name == 'SRPK2_MOUSE':
-                print(value.uniprot_entry)
-                print(value.accession_name)
-                print(value.protein_name)
-                print(value.organism)
-                print(value.brain_parts)
-
             writer.writerow([value.uniprot_entry, 
                             value.accession_name, 
                             value.protein_name, 
@@ -339,10 +344,21 @@ def construct_database(db_content):
     mydb = myclient["PROTEINS_DB"]
     mycol = mydb["proteins"]
     for key, value in db_content.items():
-        brain_parts_list = value.brain_parts.strip().replace('[','').replace(']','').replace('\'','').split(',')
-        bp_list = value.biological_process.strip().replace('[','').replace(']','').replace('\'','').split(',')
-        mf_list = value.molecular_function.strip().replace('[','').replace(']','').replace('\'','').split(',')
-        cc_list = value.cellular_component.strip().replace('[','').replace(']','').replace('\'','').split(',')
+        brain_parts_list = value.brain_parts.strip().replace('[','').replace(']','').replace('\'','').replace(' ','').split(',')
+        for index in range(len(brain_parts_list)):
+            if brain_parts_list[index] == 'Hipothalamus':
+                brain_parts_list[index] = 'Hypothalamus'
+            if brain_parts_list[index] == 'Hipocampus':
+                brain_parts_list[index] = 'Hippocampus'
+            if brain_parts_list[index] == 'Olfactory_balb':
+                brain_parts_list[index] = 'Olfactory bulb'
+            if brain_parts_list[index] == 'OlfactoryBulb':
+                brain_parts_list[index] = 'Olfactory bulb'
+            if brain_parts_list[index] == 'Mid_Brain':
+                brain_parts_list[index] = 'Midbrain'            
+        bp_list = value.biological_process.strip().replace('[','').replace(']','').replace('\'','').replace(' ','').split(',')
+        mf_list = value.molecular_function.strip().replace('[','').replace(']','').replace('\'','').replace(' ','').split(',')
+        cc_list = value.cellular_component.strip().replace('[','').replace(']','').replace('\'','').replace(' ','').split(',')
 
         x = mycol.insert_one({"UniprotEntry": value.uniprot_entry, 
                             "AccessionName": value.accession_name,
@@ -382,19 +398,19 @@ def check_for_duplicates():
 
             db_content[uniprot_entry].protein_name = protein_name
             db_content[uniprot_entry].brain_parts = new_brain_parts
-            header = ['Uniprot Entry', 'Accession Name', 'Protein Name', 'Organism', 'Brain Parts', 'Biological Process', 'Molecular Function', 'Cellular Component']
-            with open('DB_CONTENT_FINAL.csv', 'w') as csv_file:  
-                writer = csv.writer(csv_file)
-                writer.writerow(i for i in header)
-                for key, value in db_content.items():
-                    writer.writerow([value.uniprot_entry, 
-                                    value.accession_name, 
-                                    value.protein_name, 
-                                    value.organism, 
-                                    value.brain_parts, 
-                                    value.biological_process, 
-                                    value.molecular_function, 
-                                    value.cellular_component])
+    header = ['Uniprot Entry', 'Accession Name', 'Protein Name', 'Organism', 'Brain Parts', 'Biological Process', 'Molecular Function', 'Cellular Component']
+    with open('DB_CONTENT_FINAL.csv', 'w') as csv_file:  
+        writer = csv.writer(csv_file)
+        writer.writerow(i for i in header)
+        for key, value in db_content.items():
+            writer.writerow([value.uniprot_entry, 
+                            value.accession_name, 
+                            value.protein_name, 
+                            value.organism, 
+                            value.brain_parts, 
+                            value.biological_process, 
+                            value.molecular_function, 
+                            value.cellular_component])
 
 
 
@@ -407,4 +423,4 @@ if __name__ == "__main__":
     # db_content = sharma_routine()
     db_content = find_papers_for_each_paper()  
     construct_database(db_content)                
-    # print('Check Database')            
+    print('Check Database')            
