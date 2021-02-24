@@ -85,19 +85,20 @@ def get_proteins_based_on_uniprot(proteins, pathname=None, write_flag=False):
     proteins_go_dict = dict()
     keywords_dict = dict()
 
-    all_proteins = " ".join(proteins)    
-    data = get_uniprot(query=all_proteins,query_type='ACC') # do the query to the UniProt
-    content = []
-    full_data = []
-    for d in data:
-        if d == '//':
-            full_data.append(content)
-            content = []
-        else:
-            content.append(d)   
+    # all_proteins = " ".join(proteins)    
+    # data = get_uniprot(query=all_proteins,query_type='ACC') # do the query to the UniProt
+    # content = []
+    # full_data = []
+    # for d in data:
+    #     if d == '//':
+    #         full_data.append(content)
+    #         content = []
+    #     else:
+    #         content.append(d)   
     # print(len(full_data)) 
+    full_data = []
 
-    # bar = FillingCirclesBar('Get UniProt Data', max=len(proteins))
+    bar = FillingCirclesBar('Get UniProt Data', max=len(proteins))
     for index,entry in enumerate(proteins):
         # data = get_uniprot(query=entry[0],query_type='ACC') # do the query to the UniProt
         organism = []
@@ -115,6 +116,15 @@ def get_proteins_based_on_uniprot(proteins, pathname=None, write_flag=False):
         if entry not in keywords_dict:
             keywords_dict[entry] = None    
         
+        data = get_uniprot(query=entry,query_type='ACC') # do the query to the UniProt
+        content = []
+        for d in data:
+            if d == '//':
+                full_data.append(content)
+                content = []
+            else:
+                content.append(d)  
+
         for line in full_data[index]:
             if 'ID   ' in line: # Accession name of protein
                 line = line.strip().replace('ID   ','').split('   ')
@@ -167,9 +177,8 @@ def get_proteins_based_on_uniprot(proteins, pathname=None, write_flag=False):
         # make a dictionary: {protein code: (list of GO ids of molecular functions, list of GO ids of biological processes, list of GO ids of cellular components)} 
         proteins_go_dict[entry] = (molecular_functions_id,biological_processes_id,cellular_components_id)
         keywords_dict[entry] = ", ".join(list(set(keywords)))
-        # bar.next()
-    # bar.finish()  
-    
+        bar.next()
+    bar.finish()  
     if write_flag:
         write_uniprot_on_csv(pathname,df)
     return df, proteins_go_dict, keywords_dict    
